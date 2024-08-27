@@ -39,6 +39,13 @@ $(EXEC): $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+#trace
+trace:
+	xctrace record --template "Time Profiler" --launch $(EXEC) $(N)
+
+clean_trace:
+	rm -rf *.trace	
+
 # Clean
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
