@@ -130,33 +130,47 @@ ull insert_or_find(unordered_map<Key, ull, KeyHasher> memo, BitBoard red, BitBoa
   return -1ULL;
 }
 
-#define NUM_TABLES COLS*COLS*COLS*COLS*COLS*COLS
+#ifndef THREADS
+#define THREADS 0
+#endif
+#define NUM_TABLES COLS*COLS*COLS*COLS*COLS
+
+#if THREADS
+  pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 struct Memo {
   unordered_set<Key, KeyHasher> tables[NUM_TABLES];
+#if THREADS
   pthread_mutex_t mutex[NUM_TABLES];
+#endif
 
   Memo() {
+#if THREADS
     for (int i = 0; i < NUM_TABLES; i++) {
       mutex[i] = PTHREAD_MUTEX_INITIALIZER;
     } 
+#endif
   }
   bool insert(BitBoard red, BitBoard yel, BitBoard mask) {
-    int count1 = __builtin_popcountll(mask & 0x00000000003fULL);
+    // int count1 = __builtin_popcountll(mask & 0x00000000003fULL);
     int count2 = __builtin_popcountll(mask & 0x000000003f00ULL);
     int count3 = __builtin_popcountll(mask & 0x0000003f0000ULL);
     int count4 = __builtin_popcountll(mask & 0x00003f000000ULL);
     int count5 = __builtin_popcountll(mask & 0x003f00000000ULL);
     int count6 = __builtin_popcountll(mask & 0x3f0000000000ULL);
 
-    int ti = count1*COLS*COLS*COLS*COLS*COLS + count2*COLS*COLS*COLS*COLS + count3*COLS*COLS*COLS + count4*COLS*COLS + count5*COLS + count6;
+    int ti = /*count1*COLS*COLS*COLS*COLS*COLS + */ count2*COLS*COLS*COLS*COLS + count3*COLS*COLS*COLS + count4*COLS*COLS + count5*COLS + count6;
 
     unordered_set<Key, KeyHasher>* table = &tables[ti];
-
+#if THREADS
     pthread_mutex_lock(&mutex[ti]);
+#endif
     // Critical section
     bool ret = table->insert(make_tuple(red, yel)).second;
+#if THREADS
     pthread_mutex_unlock(&mutex[ti]);
+#endif
     return ret;
 
   }
@@ -239,6 +253,84 @@ struct Game {
   BitBoard mask;
 };
 
+struct SearchArgs {
+  Game game;
+  bool redTurn;
+  int maxDepth;
+  ull *count;
+  Memo *memo;
+  int spawnTilDepth;
+};
+
+void* search_child(
+  void* args
+) {
+  SearchArgs* search_args = static_cast<SearchArgs*>(args);
+
+  if (search_args->maxDepth == 0) {
+    *(search_args->count) += 1;
+    return nullptr;
+  }
+
+  BitBoard inactive = search_args->redTurn ? search_args->game.yellow : search_args->game.red;
+
+  // auto wint1 = std::chrono::high_resolution_clock::now();
+  bool winRes = checkWin(inactive);
+  // auto wint2 = std::chrono::high_resolution_clock::now();
+  // winTime += std::chrono::duration_cast<std::chrono::milliseconds>(wint2-wint1).count();
+  if (winRes) {
+    // if is win, also return 1 and stop search
+    *(search_args->count) += 1;
+    return nullptr;
+  }
+
+  // cur position is valid
+  *(search_args->count) += 1;
+  pthread_t threads[COLS];
+  bool started[COLS];
+  ull sub_counts[COLS];
+  SearchArgs child_args[COLS];
+
+  for(uint8_t i = 0; i < COLS; i++) {
+    sub_counts[i] = 0;
+    started[i] = false;
+    BitBoard new_mask = makeMove(i, search_args->game.mask);
+    if (new_mask != search_args->game.mask) {
+      BitBoard new_active = new_mask ^ inactive;
+      BitBoard new_red = search_args->redTurn ? new_active : inactive;
+      BitBoard new_yel = search_args->redTurn ? inactive : new_active;
+
+      if (search_args->memo->insert(new_red, new_yel, new_mask)) {
+        child_args[i] = SearchArgs{
+          Game{new_red, new_yel, new_mask},
+          !search_args->redTurn, search_args->maxDepth-1, &sub_counts[i], search_args->memo, search_args->spawnTilDepth
+        };
+        if (search_args->spawnTilDepth <= search_args->maxDepth) {
+          started[i] = true;
+          pthread_create(&threads[i], nullptr, search_child, &child_args[i]);
+        } else {
+          search_child(&child_args[i]);
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < COLS; i++) {
+    if (started[i]) {
+      pthread_join(threads[i], nullptr);
+    }
+    *(search_args->count) += sub_counts[i];
+  }
+#if THREADS
+  // pthread_mutex_lock(&g_lock);
+  // printBoard(search_args->game.mask);
+  // cout << "COUNT = " << *(search_args->count) << "\n\n-----\n";
+  // pthread_mutex_unlock(&g_lock);
+#endif
+
+  return nullptr;
+}
+
 ull hashTime = 0;
 void* search(
   Game game,
@@ -246,7 +338,7 @@ void* search(
   int maxDepth,
   ull &count,
 #if FLIP_OPT
-  unordered_map<Key, ull, KeyHasher> &memo
+  unordered_map<Key, ull, KeyHasher> &memo,
 #else
   // unordered_set<Key, KeyHasher> &memo
   Memo &memo
@@ -394,7 +486,14 @@ int main(int argc, char **argv) {
   cout << "starting!\n";
   // unordered_set<Key2> memo;
   unsigned long long count = 0;
+#if THREADS
+  SearchArgs args = SearchArgs {
+    Game{startingBoard(), startingBoard(), startingBoard()}, true, maxDepth, &count, &memo, maxDepth-1
+  };
+  search_child(&args);
+#else 
   search(Game{startingBoard(), startingBoard(), startingBoard()}, true, maxDepth, count, memo);
+#endif
   auto t2 = std::chrono::high_resolution_clock::now();
   std::cout << "search() took "
             << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count()
