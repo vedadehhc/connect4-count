@@ -284,8 +284,6 @@ void* search_child(
     return nullptr;
   }
 
-  // cur position is valid
-  *(search_args->count) += 1;
   pthread_t threads[COLS];
   bool started[COLS];
   ull sub_counts[COLS];
@@ -315,12 +313,15 @@ void* search_child(
     }
   }
 
+  // cur position is valid
+  ull count = 1;
   for (int i = 0; i < COLS; i++) {
     if (started[i]) {
       pthread_join(threads[i], nullptr);
     }
-    *(search_args->count) += sub_counts[i];
+    count += sub_counts[i];
   }
+  *(search_args->count) = count;
 #if THREADS
   // pthread_mutex_lock(&g_lock);
   // printBoard(search_args->game.mask);

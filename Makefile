@@ -3,7 +3,7 @@ CXX := g++
 
 # Compiler flags
 # -Wall -Wextra -pedantic
-CXXFLAGS := -std=c++17
+CXXFLAGS := -O3 -std=c++17
 
 # Check if THREADS is defined
 ifdef THREADS
