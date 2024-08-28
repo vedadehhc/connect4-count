@@ -2,8 +2,7 @@
 #include <string>
 #include <cassert>
 #include <chrono>
-#include "bitboard.h"
-#include "game.h"
+#include "game_bitboard.h"
 #include "search.h"
 #include "memo.h"
 

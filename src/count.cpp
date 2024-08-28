@@ -1,5 +1,4 @@
-#include "bitboard.h"
-#include "game.h"
+#include "game_bitboard.h"
 #include "memo.h"
 #include "search.h"
 

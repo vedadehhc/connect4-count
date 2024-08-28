@@ -3,8 +3,7 @@
 
 #include <cstdint>
 #include <unordered_set>
-#include "bitboard.h"
-#include "game.h"
+#include "game_bitboard.h"
 #include "memo.h"
 
 #ifndef THREADS

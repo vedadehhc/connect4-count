@@ -3,7 +3,7 @@
 
 #include <unordered_set>
 #include <tuple>
-#include "bitboard.h"
+#include "game_bitboard.h"
 
 #ifndef THREADS
 #define THREADS 0
