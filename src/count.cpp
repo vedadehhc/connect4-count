@@ -13,7 +13,9 @@
 #define ROWS 6
 #define COLS 7
 
+#ifndef FLIP_OPT
 #define FLIP_OPT 0
+#endif
 
 using namespace std;
 using BitBoard = uint64_t;
@@ -140,7 +142,12 @@ ull insert_or_find(unordered_map<Key, ull, KeyHasher> memo, BitBoard red, BitBoa
 #endif
 
 struct Memo {
+#if FLIP_OPT
+  unordered_map<Key, long long, KeyHasher> tables[NUM_TABLES];
+#else
   unordered_set<Key, KeyHasher> tables[NUM_TABLES];
+#endif
+
 #if THREADS
   pthread_mutex_t mutex[NUM_TABLES];
 #endif
@@ -174,6 +181,11 @@ struct Memo {
     return ret;
 
   }
+
+#if FLIP_OPT
+  long long checkFlip(BitBoard red, BitBoard yel, BitBoard mask) 
+#endif
+
 };
 
 void test() {
