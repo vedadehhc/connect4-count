@@ -16,13 +16,13 @@ OBJ_DIR := obj
 BIN_DIR := bin
 
 # Source files
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+SRCS := $(SRC_DIR)/main.cpp $(SRC_DIR)/count.cpp
 
 # Object files
 OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Executable name
-EXEC := $(BIN_DIR)/count
+EXEC := $(BIN_DIR)/connect4-count
 
 # Main target
 all: dirs $(EXEC)
@@ -44,7 +44,7 @@ trace:
 	xctrace record --template "Time Profiler" --launch $(EXEC) $(N)
 
 clean_trace:
-	rm -rf *.trace	
+	rm -rf *.trace
 
 # Clean
 clean:
