@@ -16,23 +16,36 @@ OBJ_DIR := obj
 BIN_DIR := bin
 
 # Source files
-SRCS := $(SRC_DIR)/main.cpp $(SRC_DIR)/count.cpp
+SRCS := $(SRC_DIR)/count.cpp
+
+MAIN_SRCS := $(SRC_DIR)/main.cpp $(SRCS)
+TEST_SRCS := $(SRC_DIR)/test.cpp $(SRCS)
 
 # Object files
-OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+MAIN_OBJS := $(MAIN_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+TEST_OBJS := $(TEST_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 # Executable name
-EXEC := $(BIN_DIR)/connect4-count
+EXEC := $(BIN_DIR)/connect4
+
+EXEC_TEST := $(BIN_DIR)/test
 
 # Main target
-all: dirs $(EXEC)
+all: clean main test
+
+main: dirs $(EXEC)
+
+test: dirs $(EXEC_TEST)
 
 # Create directories
 dirs:
 	mkdir -p $(OBJ_DIR) $(BIN_DIR)
 
 # Link
-$(EXEC): $(OBJS)
+$(EXEC): $(MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+$(EXEC_TEST): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 # Compile
