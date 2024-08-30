@@ -2,7 +2,6 @@
 #define SEARCH_H
 
 #include <cstdint>
-#include <unordered_set>
 #include "game_bitboard.h"
 #include "memo.h"
 

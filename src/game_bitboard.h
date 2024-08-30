@@ -98,9 +98,9 @@ inline Game makeMoveGame(Game game, int col) {
 
 inline bool checkWin(BitBoard board) {
     // Vertical
-    for (int c = 0; c < COLS; c++) {
+    for (uint8_t c = 0; c < COLS; c++) {
         uint64_t mask = 0x0FULL << (c * 8);
-        for (int offset = 0; offset <= ROWS - 4; offset++) {
+        for (uint8_t offset = 0; offset <= ROWS - 4; offset++) {
             if (__builtin_popcountll(board & (mask << offset)) == 4) {
                 return true;
             }
@@ -108,9 +108,9 @@ inline bool checkWin(BitBoard board) {
     }
 
     // Horizontal
-    for (int r = 0; r < ROWS; r++) {
+    for (uint8_t r = 0; r < ROWS; r++) {
         uint64_t mask = 0x01010101ULL << r;
-        for (int offset = 0; offset <= COLS - 4; offset++) {
+        for (uint8_t offset = 0; offset <= COLS - 4; offset++) {
             if (__builtin_popcountll(board & (mask << (8 * offset))) == 4) {
                 return true;
             }
@@ -120,8 +120,8 @@ inline bool checkWin(BitBoard board) {
     // Diagonal
     uint64_t diag_mask = (0x01) | (0x02 << 8) | (0x04 << 16) | (0x08 << 24);
     uint64_t diag_mask2 = (0x08) | (0x04 << 8) | (0x02 << 16) | (0x01 << 24);
-    for (int c = 0; c <= COLS - 4; c++) {
-        for (int r = 0; r <= ROWS - 4; r++) {
+    for (uint8_t c = 0; c <= COLS - 4; c++) {
+        for (uint8_t r = 0; r <= ROWS - 4; r++) {
             if (__builtin_popcountll(board & (diag_mask << (8 * c + r))) == 4 ||
                 __builtin_popcountll(board & (diag_mask2 << (8 * c + r))) == 4) {
                 return true;

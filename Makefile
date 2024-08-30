@@ -16,7 +16,7 @@ OBJ_DIR := obj
 BIN_DIR := bin
 
 # Source files
-SRCS := $(SRC_DIR)/count.cpp
+SRCS := $(SRC_DIR)/count.cpp $(SRC_DIR)/eval.cpp
 
 MAIN_SRCS := $(SRC_DIR)/main.cpp $(SRCS)
 TEST_SRCS := $(SRC_DIR)/test.cpp $(SRCS)
