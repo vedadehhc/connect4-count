@@ -2,3 +2,4 @@
 *.trace
 obj/
 bin/
+.vscode/
